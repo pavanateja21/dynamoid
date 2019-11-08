@@ -64,11 +64,15 @@ module Dynamoid
         if Dynamoid::Config.endpoint?
           @connection_hash[:endpoint] = Dynamoid::Config.endpoint
         end
-        if Dynamoid::Config.access_key?
-          @connection_hash[:access_key_id] = Dynamoid::Config.access_key
-        end
-        if Dynamoid::Config.secret_key?
-          @connection_hash[:secret_access_key] = Dynamoid::Config.secret_key
+        if Dynamoid::Config.credentials?
+          @connection_hash[:credentials] = Dynamoid::Config.credentials
+        else
+          if Dynamoid::Config.access_key?
+            @connection_hash[:access_key_id] = Dynamoid::Config.access_key
+          end
+          if Dynamoid::Config.secret_key?
+            @connection_hash[:secret_access_key] = Dynamoid::Config.secret_key
+          end
         end
         if Dynamoid::Config.region?
           @connection_hash[:region] = Dynamoid::Config.region
@@ -534,7 +538,7 @@ module Dynamoid
         scan_limit = opts.delete(:scan_limit)
         batch_size = opts.delete(:batch_size)
         exclusive_start_key = opts.delete(:exclusive_start_key)
-        limit = [record_limit, scan_limit, batch_size].compact.min        
+        limit = [record_limit, scan_limit, batch_size].compact.min
 
         key_conditions = {
           hk => {
@@ -632,7 +636,7 @@ module Dynamoid
         request_limit = [record_limit, scan_limit, batch_size].compact.min
         request[:limit] = request_limit if request_limit
         request[:exclusive_start_key] = exclusive_start_key if exclusive_start_key
-        
+
         if scan_hash.present?
           request[:scan_filter] = scan_hash.reduce({}) do |memo, (attr, cond)|
             memo.merge(attr.to_s => {
